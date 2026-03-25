@@ -212,14 +212,26 @@ export function useARState() {
 
       // Deep clone selected template so edits to placed state never mutate palette/library data.
       const clonedTemplate = deepClone(template);
+
+      const rotation = clonedTemplate.rotation ?? { x: 0, y: 0, z: 0 };
+      const opacity =
+        typeof clonedTemplate.opacity === 'number' ? clonedTemplate.opacity : 1;
+      const modelConfig =
+        clonedTemplate.modelConfig ?? ({} as Record<string, any>);
+
       const newObject: PlacedObject = {
         id: `${clonedTemplate.type}-${Date.now()}`,
         type: clonedTemplate.type,
         position: { x, y, z: 0 },
-        rotation: clonedTemplate.rotation,
+        // Ensure no undefined/NaN transforms sneak into renderer.
+        rotation: {
+          x: typeof rotation.x === 'number' ? rotation.x : 0,
+          y: typeof rotation.y === 'number' ? rotation.y : 0,
+          z: typeof rotation.z === 'number' ? rotation.z : 0,
+        },
         scale: clonedTemplate.scale,
-        opacity: clonedTemplate.opacity,
-        modelConfig: clonedTemplate.modelConfig,
+        opacity,
+        modelConfig,
         metadata: clonedTemplate.metadata,
       };
 

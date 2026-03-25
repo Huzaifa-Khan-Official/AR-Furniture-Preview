@@ -233,8 +233,8 @@ const createLamp = (config: Record<string, any>, globalOpacity: number) => {
 };
 
 const createFurnitureModel = (obj: PlacedObject) => {
-  const globalOpacity = obj.opacity ?? 1;
-  const config = obj.modelConfig;
+  const globalOpacity = typeof obj.opacity === 'number' ? obj.opacity : 1;
+  const config = obj.modelConfig ?? {};
 
   switch (obj.type) {
     case 'chair':
