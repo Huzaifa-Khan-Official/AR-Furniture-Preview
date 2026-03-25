@@ -43,7 +43,7 @@ function deepClone<T>(value: T): T {
   return JSON.parse(JSON.stringify(value)) as T;
 }
 
-const FURNITURE_LIBRARY: Record<FurnitureType, FurnitureTemplate> = {
+export const FURNITURE_LIBRARY: Record<FurnitureType, FurnitureTemplate> = {
   chair: {
     type: 'chair',
     rotation: { x: 0, y: 0, z: 0 },

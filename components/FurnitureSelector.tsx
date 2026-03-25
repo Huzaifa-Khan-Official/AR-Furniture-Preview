@@ -1,16 +1,16 @@
 'use client';
 
-import Image from 'next/image';
 import { cn } from '@/lib/utils';
+import { FurniturePreview } from './FurniturePreview';
+import type { FurnitureType } from '@/hooks/useARState';
 
-interface FurnitureType {
+interface FurnitureItem {
   id: string;
   name: string;
-  icon: string;
 }
 
 interface FurnitureSelectorProps {
-  items: FurnitureType[];
+  items: FurnitureItem[];
   selected: string | null;
   onSelect: (id: string) => void;
 }
@@ -23,19 +23,21 @@ export function FurnitureSelector({
   return (
     <div className="space-y-3">
       <h3 className="text-sm font-bold text-gray-900">Select Furniture</h3>
-      <div className="grid grid-cols-2 gap-3 max-h-48 overflow-y-auto pr-1">
+      <div className="grid grid-cols-2 gap-3 max-h-64 overflow-y-auto pr-1">
         {items.map(item => (
           <button
             key={item.id}
             onClick={() => onSelect(item.id)}
             className={cn(
-              'flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all',
+              'flex flex-col items-center gap-2 p-2 rounded-xl border-2 transition-all',
               selected === item.id
                 ? 'border-blue-500 bg-blue-50 shadow-md'
                 : 'border-gray-200 bg-white hover:border-gray-300'
             )}
           >
-            <span className="text-2xl">{item.icon}</span>
+            <div className="w-full aspect-square overflow-hidden rounded-lg">
+              <FurniturePreview type={item.id as FurnitureType} />
+            </div>
             <span className="text-xs font-semibold text-gray-700 capitalize">
               {item.name}
             </span>

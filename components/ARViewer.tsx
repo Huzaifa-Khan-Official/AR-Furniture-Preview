@@ -281,7 +281,7 @@ const createLamp = (config: Record<string, any>, globalOpacity: number) => {
   return group;
 };
 
-const createFurnitureModel = (obj: PlacedObject) => {
+export const createFurnitureModel = (obj: PlacedObject) => {
   const globalOpacity = typeof obj.opacity === 'number' ? obj.opacity : 1;
   const config = obj.modelConfig ?? {};
 
@@ -614,19 +614,16 @@ export function ARViewer({
       const deltaX = canvasX - touchStateRef.current.startX;
       const deltaY = canvasY - touchStateRef.current.startY;
 
-      if (onMoveObject) {
-        const activeObj = placedObjects.find(obj => obj.id === touchStateRef.current!.objectId);
-        if (activeObj) {
-          const normalizedDeltaX = deltaX / rect.width;
-          const normalizedDeltaY = deltaY / rect.height;
-          onMoveObject(
-            touchStateRef.current.objectId,
-            activeObj.position.x + normalizedDeltaX,
-            activeObj.position.y + normalizedDeltaY
-          );
-          touchStateRef.current.startX = canvasX;
-          touchStateRef.current.startY = canvasY;
-        }
+      const model = objectsRef.current[touchStateRef.current.objectId];
+      if (model) {
+        const sceneWidth = rect.width / 100;
+        const sceneHeight = rect.height / 100;
+        model.position.x = Math.max(-sceneWidth / 2, Math.min(sceneWidth / 2,
+          model.position.x + (deltaX / rect.width) * sceneWidth));
+        model.position.y = Math.max(-sceneHeight / 2, Math.min(sceneHeight / 2,
+          model.position.y - (deltaY / rect.height) * sceneHeight));
+        touchStateRef.current.startX = canvasX;
+        touchStateRef.current.startY = canvasY;
       }
     } else if (e.touches.length === 2 && touchStateRef.current.type === 'scale') {
       const touch1 = e.touches[0];
@@ -645,6 +642,19 @@ export function ARViewer({
   };
 
   const handleTouchEnd = () => {
+    if (touchStateRef.current && onMoveObject && canvasRef.current) {
+      const model = objectsRef.current[touchStateRef.current.objectId];
+      if (model) {
+        const rect = canvasRef.current.getBoundingClientRect();
+        const sceneWidth = rect.width / 100;
+        const sceneHeight = rect.height / 100;
+        onMoveObject(
+          touchStateRef.current.objectId,
+          model.position.x / sceneWidth,
+          -(model.position.y / sceneHeight)
+        );
+      }
+    }
     touchStateRef.current = null;
   };
 
@@ -672,18 +682,19 @@ export function ARViewer({
     const deltaX = canvasX - mouseStateRef.current.startX;
     const deltaY = canvasY - mouseStateRef.current.startY;
 
-    if (Math.hypot(deltaX, deltaY) > 4) {
+    if (Math.hypot(deltaX, deltaY) > 3) {
       didDragRef.current = true;
     }
 
-    if (didDragRef.current && onMoveObject) {
-      const activeObj = placedObjects.find(obj => obj.id === mouseStateRef.current!.objectId);
-      if (activeObj) {
-        onMoveObject(
-          mouseStateRef.current.objectId,
-          activeObj.position.x + deltaX / rect.width,
-          activeObj.position.y + deltaY / rect.height
-        );
+    if (didDragRef.current) {
+      const model = objectsRef.current[mouseStateRef.current.objectId];
+      if (model) {
+        const sceneWidth = rect.width / 100;
+        const sceneHeight = rect.height / 100;
+        model.position.x = Math.max(-sceneWidth / 2, Math.min(sceneWidth / 2,
+          model.position.x + (deltaX / rect.width) * sceneWidth));
+        model.position.y = Math.max(-sceneHeight / 2, Math.min(sceneHeight / 2,
+          model.position.y - (deltaY / rect.height) * sceneHeight));
         mouseStateRef.current.startX = canvasX;
         mouseStateRef.current.startY = canvasY;
       }
@@ -691,6 +702,19 @@ export function ARViewer({
   };
 
   const handleMouseUp = () => {
+    if (mouseStateRef.current && didDragRef.current && onMoveObject && canvasRef.current) {
+      const model = objectsRef.current[mouseStateRef.current.objectId];
+      if (model) {
+        const rect = canvasRef.current.getBoundingClientRect();
+        const sceneWidth = rect.width / 100;
+        const sceneHeight = rect.height / 100;
+        onMoveObject(
+          mouseStateRef.current.objectId,
+          model.position.x / sceneWidth,
+          -(model.position.y / sceneHeight)
+        );
+      }
+    }
     mouseStateRef.current = null;
   };
 
