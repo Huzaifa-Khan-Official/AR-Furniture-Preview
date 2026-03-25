@@ -326,6 +326,12 @@ export function ARViewer({
     initialScale?: number;
     initialDistance?: number;
   } | null>(null);
+  const mouseStateRef = useRef<{
+    objectId: string;
+    startX: number;
+    startY: number;
+  } | null>(null);
+  const didDragRef = useRef(false);
 
   // Initialize Three.js scene
   useEffect(() => {
@@ -481,8 +487,10 @@ export function ARViewer({
       const rotZ = typeof obj.rotation?.z === 'number' ? obj.rotation.z : 0;
       const scale = typeof obj.scale === 'number' ? obj.scale : 1;
 
-      model.position.x = (posX + 0.5) * 3;
-      model.position.y = -(posY - 0.5) * 3;
+      const sceneWidth = canvasDimensions.width > 0 ? canvasDimensions.width / 100 : 6;
+      const sceneHeight = canvasDimensions.height > 0 ? canvasDimensions.height / 100 : 4;
+      model.position.x = posX * sceneWidth;
+      model.position.y = -posY * sceneHeight;
       model.rotation.x = (rotX * Math.PI) / 180;
       model.rotation.y = (rotY * Math.PI) / 180;
       model.rotation.z = (rotZ * Math.PI) / 180;
@@ -512,7 +520,7 @@ export function ARViewer({
       sceneRef.current?.add(model);
       objectsRef.current[obj.id] = model;
     });
-  }, [placedObjects, activeObjectId]);
+  }, [placedObjects, activeObjectId, canvasDimensions]);
 
   const getObjectAtPosition = (canvasX: number, canvasY: number): PlacedObject | null => {
     const normalizedX = canvasX / canvasDimensions.width - 0.5;
@@ -530,6 +538,7 @@ export function ARViewer({
   };
 
   const handleCanvasClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (didDragRef.current) return; // was a drag, not a click
     if (!canvasRef.current) return;
 
     const rect = canvasRef.current.getBoundingClientRect();
@@ -605,23 +614,17 @@ export function ARViewer({
       const deltaX = canvasX - touchStateRef.current.startX;
       const deltaY = canvasY - touchStateRef.current.startY;
 
-      if (Math.abs(deltaX) > Math.abs(deltaY)) {
-        if (onMoveObject) {
-          const activeObj = placedObjects.find(obj => obj.id === touchStateRef.current!.objectId);
-          if (activeObj) {
-            const normalizedDeltaX = (deltaX / rect.width) * 0.15;
-            onMoveObject(
-              touchStateRef.current.objectId,
-              activeObj.position.x + normalizedDeltaX,
-              activeObj.position.y
-            );
-            touchStateRef.current.startX = canvasX;
-          }
-        }
-      } else {
-        if (onRotateObject) {
-          const rotation = (deltaY / rect.height) * 180;
-          onRotateObject(touchStateRef.current.objectId, rotation);
+      if (onMoveObject) {
+        const activeObj = placedObjects.find(obj => obj.id === touchStateRef.current!.objectId);
+        if (activeObj) {
+          const normalizedDeltaX = deltaX / rect.width;
+          const normalizedDeltaY = deltaY / rect.height;
+          onMoveObject(
+            touchStateRef.current.objectId,
+            activeObj.position.x + normalizedDeltaX,
+            activeObj.position.y + normalizedDeltaY
+          );
+          touchStateRef.current.startX = canvasX;
           touchStateRef.current.startY = canvasY;
         }
       }
@@ -645,6 +648,52 @@ export function ARViewer({
     touchStateRef.current = null;
   };
 
+  const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (!canvasRef.current) return;
+    didDragRef.current = false;
+    const rect = canvasRef.current.getBoundingClientRect();
+    const canvasX = e.clientX - rect.left;
+    const canvasY = e.clientY - rect.top;
+    const clickedObject = getObjectAtPosition(canvasX, canvasY);
+    if (clickedObject) {
+      mouseStateRef.current = {
+        objectId: clickedObject.id,
+        startX: canvasX,
+        startY: canvasY,
+      };
+    }
+  };
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (!mouseStateRef.current || !canvasRef.current) return;
+    const rect = canvasRef.current.getBoundingClientRect();
+    const canvasX = e.clientX - rect.left;
+    const canvasY = e.clientY - rect.top;
+    const deltaX = canvasX - mouseStateRef.current.startX;
+    const deltaY = canvasY - mouseStateRef.current.startY;
+
+    if (Math.hypot(deltaX, deltaY) > 4) {
+      didDragRef.current = true;
+    }
+
+    if (didDragRef.current && onMoveObject) {
+      const activeObj = placedObjects.find(obj => obj.id === mouseStateRef.current!.objectId);
+      if (activeObj) {
+        onMoveObject(
+          mouseStateRef.current.objectId,
+          activeObj.position.x + deltaX / rect.width,
+          activeObj.position.y + deltaY / rect.height
+        );
+        mouseStateRef.current.startX = canvasX;
+        mouseStateRef.current.startY = canvasY;
+      }
+    }
+  };
+
+  const handleMouseUp = () => {
+    mouseStateRef.current = null;
+  };
+
   return (
     <div className="relative w-full h-full bg-linear-to-br from-slate-900 to-slate-800 rounded-2xl overflow-hidden shadow-2xl">
       <video
@@ -655,6 +704,10 @@ export function ARViewer({
       <canvas
         ref={canvasRef}
         onClick={handleCanvasClick}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseUp}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
@@ -671,7 +724,7 @@ export function ARViewer({
       )}
 
       <div className="absolute bottom-4 left-4 right-4 text-white text-xs bg-black/40 backdrop-blur-sm rounded-lg p-3 space-y-1">
-        <p>TAP: Select • SWIPE: Move • DRAG UP/DOWN: Rotate • PINCH: Scale</p>
+        <p>TAP: Place/Select • DRAG: Move • PINCH: Scale</p>
       </div>
     </div>
   );
