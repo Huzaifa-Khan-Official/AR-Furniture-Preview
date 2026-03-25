@@ -75,6 +75,44 @@ export function useARState() {
     []
   );
 
+  const moveObject = useCallback(
+    (id: string, x: number, y: number) => {
+      setState(prev => ({
+        ...prev,
+        placedObjects: prev.placedObjects.map(obj =>
+          obj.id === id ? { ...obj, position: { ...obj.position, x, y } } : obj
+        ),
+      }));
+    },
+    []
+  );
+
+  const rotateObject = useCallback(
+    (id: string, angle: number) => {
+      setState(prev => ({
+        ...prev,
+        placedObjects: prev.placedObjects.map(obj =>
+          obj.id === id 
+            ? { ...obj, rotation: { ...obj.rotation, z: (obj.rotation.z + angle) % 360 } } 
+            : obj
+        ),
+      }));
+    },
+    []
+  );
+
+  const scaleObject = useCallback(
+    (id: string, scale: number) => {
+      setState(prev => ({
+        ...prev,
+        placedObjects: prev.placedObjects.map(obj =>
+          obj.id === id ? { ...obj, scale } : obj
+        ),
+      }));
+    },
+    []
+  );
+
   const deleteObject = useCallback((id: string) => {
     setState(prev => ({
       ...prev,
@@ -120,6 +158,9 @@ export function useARState() {
     placeObject,
     updateObject,
     deleteObject,
+    moveObject,
+    rotateObject,
+    scaleObject,
     setActiveObject,
     reset,
     setCameraReady,

@@ -1,25 +1,21 @@
 'use client';
 
 import { PlacedObject } from '@/hooks/useARState';
-import { Trash2, RotateCw, ZoomIn, ZoomOut } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
 
 interface ControlsPanelProps {
   activeObject: PlacedObject | null;
-  onRotate: (axis: 'x' | 'y' | 'z', angle: number) => void;
-  onScale: (scale: number) => void;
   onDelete: () => void;
 }
 
 export function ControlsPanel({
   activeObject,
-  onRotate,
-  onScale,
   onDelete,
 }: ControlsPanelProps) {
   if (!activeObject) {
     return (
       <div className="bg-white/80 backdrop-blur-md rounded-2xl p-6 shadow-lg border border-white/20 text-center">
-        <p className="text-gray-600 font-medium">Select an object to adjust</p>
+        <p className="text-gray-600 font-medium">Select an object on camera to adjust</p>
       </div>
     );
   }
@@ -27,7 +23,7 @@ export function ControlsPanel({
   return (
     <div className="bg-white/90 backdrop-blur-md rounded-2xl p-6 shadow-lg border border-white/20 space-y-6">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-bold text-gray-900 capitalize">
+        <h3 className="text-2xl font-bold text-gray-900 capitalize">
           {activeObject.type}
         </h3>
         <button
@@ -35,73 +31,44 @@ export function ControlsPanel({
           className="p-2 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 transition-colors"
           title="Delete object"
         >
-          <Trash2 size={20} />
+          <Trash2 size={24} />
         </button>
       </div>
 
       <div className="space-y-4">
-        {/* Rotation Controls */}
-        <div className="space-y-3">
-          <label className="block text-sm font-semibold text-gray-700">
-            Rotate
-          </label>
-          <div className="grid grid-cols-3 gap-2">
-            {(['x', 'y', 'z'] as const).map(axis => (
-              <div key={axis} className="space-y-2">
-                <p className="text-xs font-medium text-gray-600 text-center capitalize">
-                  {axis}-axis
-                </p>
-                <div className="flex gap-1">
-                  <button
-                    onClick={() => onRotate(axis, -15)}
-                    className="flex-1 px-2 py-2 bg-blue-50 hover:bg-blue-100 text-blue-600 font-bold rounded-lg text-sm transition-colors"
-                  >
-                    −
-                  </button>
-                  <button
-                    onClick={() => onRotate(axis, 15)}
-                    className="flex-1 px-2 py-2 bg-blue-50 hover:bg-blue-100 text-blue-600 font-bold rounded-lg text-sm transition-colors"
-                  >
-                    +
-                  </button>
-                </div>
-              </div>
-            ))}
+        {/* Gesture Controls Guide */}
+        <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-4 space-y-3 border border-blue-200">
+          <p className="font-semibold text-gray-900 text-sm">Screen Gestures</p>
+          <div className="space-y-2 text-xs text-gray-700">
+            <div className="flex gap-2">
+              <span className="font-medium text-blue-600 min-w-fit">SWIPE:</span>
+              <span>Move furniture left/right</span>
+            </div>
+            <div className="flex gap-2">
+              <span className="font-medium text-blue-600 min-w-fit">DRAG UP/DOWN:</span>
+              <span>Rotate furniture</span>
+            </div>
+            <div className="flex gap-2">
+              <span className="font-medium text-blue-600 min-w-fit">PINCH:</span>
+              <span>Scale furniture (2 fingers)</span>
+            </div>
           </div>
         </div>
 
-        {/* Scale Controls */}
-        <div className="space-y-3">
-          <label className="block text-sm font-semibold text-gray-700">
-            Size: {activeObject.scale.toFixed(2)}x
-          </label>
-          <div className="flex gap-2">
-            <button
-              onClick={() => onScale(Math.max(0.5, activeObject.scale - 0.2))}
-              className="flex-1 px-3 py-2 bg-amber-50 hover:bg-amber-100 text-amber-600 font-semibold rounded-lg flex items-center justify-center gap-2 transition-colors"
-            >
-              <ZoomOut size={18} />
-              Smaller
-            </button>
-            <button
-              onClick={() => onScale(Math.min(2, activeObject.scale + 0.2))}
-              className="flex-1 px-3 py-2 bg-amber-50 hover:bg-amber-100 text-amber-600 font-semibold rounded-lg flex items-center justify-center gap-2 transition-colors"
-            >
-              <ZoomIn size={18} />
-              Larger
-            </button>
+        {/* Object Info */}
+        <div className="bg-gray-50 rounded-lg p-4 text-sm space-y-2 border border-gray-200">
+          <div className="flex justify-between">
+            <span className="text-gray-600">Position:</span>
+            <span className="font-mono text-gray-900">({activeObject.position.x.toFixed(2)}, {activeObject.position.y.toFixed(2)})</span>
           </div>
-        </div>
-
-        {/* Position Info */}
-        <div className="bg-gray-50 rounded-lg p-3 text-xs font-mono text-gray-600 space-y-1">
-          <p>
-            Position: ({activeObject.position.x.toFixed(2)}, {activeObject.position.y.toFixed(2)})
-          </p>
-          <p>
-            Rotation: ({activeObject.rotation.x.toFixed(0)}°, {activeObject.rotation.y.toFixed(0)}°,{' '}
-            {activeObject.rotation.z.toFixed(0)}°)
-          </p>
+          <div className="flex justify-between">
+            <span className="text-gray-600">Size:</span>
+            <span className="font-mono text-gray-900">{activeObject.scale.toFixed(2)}x</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-gray-600">Rotation:</span>
+            <span className="font-mono text-gray-900">{activeObject.rotation.z.toFixed(0)}°</span>
+          </div>
         </div>
       </div>
     </div>

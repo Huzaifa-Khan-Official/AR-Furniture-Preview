@@ -13,8 +13,10 @@ export default function Home() {
     state,
     selectFurniture,
     placeObject,
-    updateObject,
     deleteObject,
+    moveObject,
+    rotateObject,
+    scaleObject,
     setActiveObject,
     reset,
     setCameraReady,
@@ -24,20 +26,6 @@ export default function Home() {
   const [showHelp, setShowHelp] = useState(false);
 
   const activeObject = state.placedObjects.find(obj => obj.id === state.activeObjectId);
-
-  const handleRotate = (axis: 'x' | 'y' | 'z', angle: number) => {
-    if (activeObject) {
-      const newRotation = { ...activeObject.rotation };
-      newRotation[axis] = (newRotation[axis] + angle) % 360;
-      updateObject(activeObject.id, { rotation: newRotation });
-    }
-  };
-
-  const handleScale = (scale: number) => {
-    if (activeObject) {
-      updateObject(activeObject.id, { scale });
-    }
-  };
 
   const handleDelete = () => {
     if (activeObject) {
@@ -73,8 +61,6 @@ export default function Home() {
           />
           <ControlsPanel
             activeObject={activeObject || null}
-            onRotate={handleRotate}
-            onScale={handleScale}
             onDelete={handleDelete}
           />
         </div>
@@ -87,6 +73,9 @@ export default function Home() {
             onPlaceObject={placeObject}
             onCameraReady={setCameraReady}
             onObjectSelect={setActiveObject}
+            onMoveObject={moveObject}
+            onRotateObject={rotateObject}
+            onScaleObject={scaleObject}
           />
         </div>
       </div>
