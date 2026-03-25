@@ -16,35 +16,75 @@ interface ARViewerProps {
 }
 
 // Furniture model creation functions
-const createChair = () => {
+const createStandardMaterial = (
+  params: Record<string, any>,
+  globalOpacity: number
+) => {
+  const opacity =
+    typeof params?.opacity === 'number' ? params.opacity : globalOpacity;
+
+  const materialParams: Record<string, any> = {
+    color: params.color,
+  };
+
+  if (typeof params.roughness === 'number') materialParams.roughness = params.roughness;
+  if (typeof params.metalness === 'number') materialParams.metalness = params.metalness;
+  if (typeof params.emissive === 'number') materialParams.emissive = params.emissive;
+  if (typeof params.emissiveIntensity === 'number') materialParams.emissiveIntensity = params.emissiveIntensity;
+
+  const material = new THREE.MeshStandardMaterial(materialParams);
+
+  if (typeof opacity === 'number' && opacity < 1) {
+    material.transparent = true;
+    material.opacity = opacity;
+  }
+
+  return material;
+};
+
+const createChair = (config: Record<string, any>, globalOpacity: number) => {
   const group = new THREE.Group();
 
   // Seat
-  const seatGeometry = new THREE.BoxGeometry(0.4, 0.1, 0.4);
-  const seatMaterial = new THREE.MeshStandardMaterial({ color: 0x8B4513, roughness: 0.6 });
+  const seatGeometry = new THREE.BoxGeometry(
+    config.seat.geometry.w,
+    config.seat.geometry.h,
+    config.seat.geometry.d
+  );
+  const seatMaterial = createStandardMaterial(config.seat.material, globalOpacity);
   const seat = new THREE.Mesh(seatGeometry, seatMaterial);
-  seat.position.y = 0.4;
+  seat.position.set(
+    config.seat.position.x,
+    config.seat.position.y,
+    config.seat.position.z
+  );
   group.add(seat);
 
   // Backrest
-  const backGeometry = new THREE.BoxGeometry(0.4, 0.6, 0.1);
-  const backMaterial = new THREE.MeshStandardMaterial({ color: 0xA0522D, roughness: 0.6 });
+  const backGeometry = new THREE.BoxGeometry(
+    config.backrest.geometry.w,
+    config.backrest.geometry.h,
+    config.backrest.geometry.d
+  );
+  const backMaterial = createStandardMaterial(config.backrest.material, globalOpacity);
   const back = new THREE.Mesh(backGeometry, backMaterial);
-  back.position.y = 0.7;
-  back.position.z = -0.15;
+  back.position.set(
+    config.backrest.position.x,
+    config.backrest.position.y,
+    config.backrest.position.z
+  );
   group.add(back);
 
   // Legs
-  const legGeometry = new THREE.BoxGeometry(0.08, 0.4, 0.08);
-  const legMaterial = new THREE.MeshStandardMaterial({ color: 0x654321, roughness: 0.5 });
-  const legPositions = [
-    [0.15, 0.2, 0.15],
-    [0.15, 0.2, -0.15],
-    [-0.15, 0.2, 0.15],
-    [-0.15, 0.2, -0.15],
-  ];
+  const legGeometry = new THREE.BoxGeometry(
+    config.legs.geometry.w,
+    config.legs.geometry.h,
+    config.legs.geometry.d
+  );
+  const legMaterial = createStandardMaterial(config.legs.material, globalOpacity);
+  const legPositions: Array<{ x: number; y: number; z: number }> = config.legs.positions;
 
-  legPositions.forEach(([x, y, z]) => {
+  legPositions.forEach(({ x, y, z }) => {
     const leg = new THREE.Mesh(legGeometry, legMaterial);
     leg.position.set(x, y, z);
     group.add(leg);
@@ -53,27 +93,34 @@ const createChair = () => {
   return group;
 };
 
-const createTable = () => {
+const createTable = (config: Record<string, any>, globalOpacity: number) => {
   const group = new THREE.Group();
 
   // Top
-  const topGeometry = new THREE.BoxGeometry(0.8, 0.08, 0.5);
-  const topMaterial = new THREE.MeshStandardMaterial({ color: 0xD2691E, roughness: 0.4, metalness: 0.1 });
+  const topGeometry = new THREE.BoxGeometry(
+    config.top.geometry.w,
+    config.top.geometry.h,
+    config.top.geometry.d
+  );
+  const topMaterial = createStandardMaterial(config.top.material, globalOpacity);
   const top = new THREE.Mesh(topGeometry, topMaterial);
-  top.position.y = 0.7;
+  top.position.set(
+    config.top.position.x,
+    config.top.position.y,
+    config.top.position.z
+  );
   group.add(top);
 
   // Legs
-  const legGeometry = new THREE.BoxGeometry(0.1, 0.7, 0.1);
-  const legMaterial = new THREE.MeshStandardMaterial({ color: 0x8B4513, roughness: 0.5 });
-  const legPositions = [
-    [0.3, 0.35, 0.15],
-    [0.3, 0.35, -0.15],
-    [-0.3, 0.35, 0.15],
-    [-0.3, 0.35, -0.15],
-  ];
+  const legGeometry = new THREE.BoxGeometry(
+    config.legs.geometry.w,
+    config.legs.geometry.h,
+    config.legs.geometry.d
+  );
+  const legMaterial = createStandardMaterial(config.legs.material, globalOpacity);
+  const legPositions: Array<{ x: number; y: number; z: number }> = config.legs.positions;
 
-  legPositions.forEach(([x, y, z]) => {
+  legPositions.forEach(({ x, y, z }) => {
     const leg = new THREE.Mesh(legGeometry, legMaterial);
     leg.position.set(x, y, z);
     group.add(leg);
@@ -82,40 +129,49 @@ const createTable = () => {
   return group;
 };
 
-const createSofa = () => {
+const createSofa = (config: Record<string, any>, globalOpacity: number) => {
   const group = new THREE.Group();
 
   // Main body
-  const bodyGeometry = new THREE.BoxGeometry(1.2, 0.4, 0.6);
-  const bodyMaterial = new THREE.MeshStandardMaterial({ 
-    color: 0xFFFAAD, 
-    roughness: 0.7,
-    emissive: 0xF0E68C,
-    emissiveIntensity: 0.2
-  });
+  const bodyGeometry = new THREE.BoxGeometry(
+    config.body.geometry.w,
+    config.body.geometry.h,
+    config.body.geometry.d
+  );
+  const bodyMaterial = createStandardMaterial(config.body.material, globalOpacity);
   const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
-  body.position.y = 0.3;
+  body.position.set(
+    config.body.position.x,
+    config.body.position.y,
+    config.body.position.z
+  );
   group.add(body);
 
   // Backrest
-  const backGeometry = new THREE.BoxGeometry(1.2, 0.5, 0.2);
-  const backMaterial = new THREE.MeshStandardMaterial({ color: 0xFFF8DC, roughness: 0.7 });
+  const backGeometry = new THREE.BoxGeometry(
+    config.backrest.geometry.w,
+    config.backrest.geometry.h,
+    config.backrest.geometry.d
+  );
+  const backMaterial = createStandardMaterial(config.backrest.material, globalOpacity);
   const back = new THREE.Mesh(backGeometry, backMaterial);
-  back.position.y = 0.6;
-  back.position.z = -0.35;
+  back.position.set(
+    config.backrest.position.x,
+    config.backrest.position.y,
+    config.backrest.position.z
+  );
   group.add(back);
 
   // Legs
-  const legGeometry = new THREE.BoxGeometry(0.12, 0.3, 0.12);
-  const legMaterial = new THREE.MeshStandardMaterial({ color: 0x696969, roughness: 0.5 });
-  const legPositions = [
-    [0.45, 0.15, 0.2],
-    [0.45, 0.15, -0.2],
-    [-0.45, 0.15, 0.2],
-    [-0.45, 0.15, -0.2],
-  ];
+  const legGeometry = new THREE.BoxGeometry(
+    config.legs.geometry.w,
+    config.legs.geometry.h,
+    config.legs.geometry.d
+  );
+  const legMaterial = createStandardMaterial(config.legs.material, globalOpacity);
+  const legPositions: Array<{ x: number; y: number; z: number }> = config.legs.positions;
 
-  legPositions.forEach(([x, y, z]) => {
+  legPositions.forEach(({ x, y, z }) => {
     const leg = new THREE.Mesh(legGeometry, legMaterial);
     leg.position.set(x, y, z);
     group.add(leg);
@@ -124,50 +180,74 @@ const createSofa = () => {
   return group;
 };
 
-const createLamp = () => {
+const createLamp = (config: Record<string, any>, globalOpacity: number) => {
   const group = new THREE.Group();
 
   // Base
-  const baseGeometry = new THREE.ConeGeometry(0.25, 0.1, 32);
-  const baseMaterial = new THREE.MeshStandardMaterial({ color: 0x505050, roughness: 0.6 });
+  const baseGeometry = new THREE.ConeGeometry(
+    config.base.geometry.radius,
+    config.base.geometry.height,
+    config.base.geometry.radialSegments
+  );
+  const baseMaterial = createStandardMaterial(config.base.material, globalOpacity);
   const base = new THREE.Mesh(baseGeometry, baseMaterial);
-  base.position.y = 0.05;
+  base.position.set(
+    config.base.position.x,
+    config.base.position.y,
+    config.base.position.z
+  );
   group.add(base);
 
   // Pole
-  const poleGeometry = new THREE.CylinderGeometry(0.03, 0.03, 1.0, 16);
-  const poleMaterial = new THREE.MeshStandardMaterial({ color: 0x303030, metalness: 0.8, roughness: 0.3 });
+  const poleGeometry = new THREE.CylinderGeometry(
+    config.pole.geometry.radiusTop,
+    config.pole.geometry.radiusBottom,
+    config.pole.geometry.height,
+    config.pole.geometry.radialSegments
+  );
+  const poleMaterial = createStandardMaterial(config.pole.material, globalOpacity);
   const pole = new THREE.Mesh(poleGeometry, poleMaterial);
-  pole.position.y = 0.5;
+  pole.position.set(
+    config.pole.position.x,
+    config.pole.position.y,
+    config.pole.position.z
+  );
   group.add(pole);
 
   // Shade
-  const shadeGeometry = new THREE.ConeGeometry(0.2, 0.3, 32);
-  const shadeMaterial = new THREE.MeshStandardMaterial({ 
-    color: 0xFFA500,
-    emissive: 0xFF8C00,
-    emissiveIntensity: 0.3,
-    roughness: 0.4
-  });
+  const shadeGeometry = new THREE.ConeGeometry(
+    config.shade.geometry.radius,
+    config.shade.geometry.height,
+    config.shade.geometry.radialSegments
+  );
+  const shadeMaterial = createStandardMaterial(config.shade.material, globalOpacity);
   const shade = new THREE.Mesh(shadeGeometry, shadeMaterial);
-  shade.position.y = 1.15;
+  shade.position.set(
+    config.shade.position.x,
+    config.shade.position.y,
+    config.shade.position.z
+  );
   group.add(shade);
 
   return group;
 };
 
-const createFurnitureModel = (type: string) => {
-  switch (type) {
+const createFurnitureModel = (obj: PlacedObject) => {
+  const globalOpacity = obj.opacity ?? 1;
+  const config = obj.modelConfig;
+
+  switch (obj.type) {
     case 'chair':
-      return createChair();
+      return createChair(config, globalOpacity);
     case 'table':
-      return createTable();
+      return createTable(config, globalOpacity);
     case 'sofa':
-      return createSofa();
+      return createSofa(config, globalOpacity);
     case 'lamp':
-      return createLamp();
+      return createLamp(config, globalOpacity);
     default:
-      return createChair();
+      // Should never happen: placement prevents unknown types.
+      return new THREE.Group();
   }
 };
 
@@ -344,9 +424,11 @@ export function ARViewer({
 
     // Add new objects
     placedObjects.forEach((obj) => {
-      const model = createFurnitureModel(obj.type);
+      const model = createFurnitureModel(obj);
       model.position.x = (obj.position.x + 0.5) * 3;
       model.position.y = -(obj.position.y - 0.5) * 3;
+      model.rotation.x = (obj.rotation.x * Math.PI) / 180;
+      model.rotation.y = (obj.rotation.y * Math.PI) / 180;
       model.rotation.z = (obj.rotation.z * Math.PI) / 180;
       model.scale.multiplyScalar(obj.scale);
 
@@ -354,11 +436,18 @@ export function ARViewer({
       if (obj.id === activeObjectId) {
         model.traverse((child) => {
           if (child instanceof THREE.Mesh) {
-            const originalMaterial = child.material as THREE.MeshStandardMaterial;
-            const highlightMaterial = originalMaterial.clone();
-            highlightMaterial.emissive = new THREE.Color(0x44ff88);
-            highlightMaterial.emissiveIntensity = 0.4;
-            child.material = highlightMaterial;
+            const originalMaterial = child.material as any;
+            if (typeof originalMaterial?.clone === 'function') {
+              const highlightMaterial = originalMaterial.clone();
+              // Keep all original material properties; only add glow highlight.
+              if ('emissive' in highlightMaterial) {
+                highlightMaterial.emissive = new THREE.Color(0x44ff88);
+              }
+              if ('emissiveIntensity' in highlightMaterial) {
+                highlightMaterial.emissiveIntensity = 0.4;
+              }
+              child.material = highlightMaterial;
+            }
           }
         });
       }
