@@ -17,20 +17,23 @@ interface ARViewerProps {
 
 // Furniture model creation functions
 const createStandardMaterial = (
-  params: Record<string, any>,
+  params: Record<string, any> | undefined,
   globalOpacity: number
 ) => {
+  const safeParams = params ?? {};
   const opacity =
-    typeof params?.opacity === 'number' ? params.opacity : globalOpacity;
+    typeof safeParams.opacity === 'number'
+      ? safeParams.opacity
+      : globalOpacity;
 
   const materialParams: Record<string, any> = {
-    color: params.color,
+    color: safeParams.color ?? 0xffffff,
   };
 
-  if (typeof params.roughness === 'number') materialParams.roughness = params.roughness;
-  if (typeof params.metalness === 'number') materialParams.metalness = params.metalness;
-  if (typeof params.emissive === 'number') materialParams.emissive = params.emissive;
-  if (typeof params.emissiveIntensity === 'number') materialParams.emissiveIntensity = params.emissiveIntensity;
+  if (typeof safeParams.roughness === 'number') materialParams.roughness = safeParams.roughness;
+  if (typeof safeParams.metalness === 'number') materialParams.metalness = safeParams.metalness;
+  if (typeof safeParams.emissive === 'number') materialParams.emissive = safeParams.emissive;
+  if (typeof safeParams.emissiveIntensity === 'number') materialParams.emissiveIntensity = safeParams.emissiveIntensity;
 
   const material = new THREE.MeshStandardMaterial(materialParams);
 
@@ -46,43 +49,55 @@ const createChair = (config: Record<string, any>, globalOpacity: number) => {
   const group = new THREE.Group();
 
   // Seat
+  const seatGeometryCfg = config?.seat?.geometry ?? {};
+  const seatMaterialCfg = config?.seat?.material ?? {};
   const seatGeometry = new THREE.BoxGeometry(
-    config.seat.geometry.w,
-    config.seat.geometry.h,
-    config.seat.geometry.d
+    typeof seatGeometryCfg.w === 'number' ? seatGeometryCfg.w : 0.4,
+    typeof seatGeometryCfg.h === 'number' ? seatGeometryCfg.h : 0.1,
+    typeof seatGeometryCfg.d === 'number' ? seatGeometryCfg.d : 0.4
   );
-  const seatMaterial = createStandardMaterial(config.seat.material, globalOpacity);
+  const seatMaterial = createStandardMaterial(seatMaterialCfg, globalOpacity);
   const seat = new THREE.Mesh(seatGeometry, seatMaterial);
   seat.position.set(
-    config.seat.position.x,
-    config.seat.position.y,
-    config.seat.position.z
+    typeof config?.seat?.position?.x === 'number' ? config.seat.position.x : 0,
+    typeof config?.seat?.position?.y === 'number' ? config.seat.position.y : 0.4,
+    typeof config?.seat?.position?.z === 'number' ? config.seat.position.z : 0
   );
   group.add(seat);
 
   // Backrest
+  const backGeometryCfg = config?.backrest?.geometry ?? {};
+  const backMaterialCfg = config?.backrest?.material ?? {};
   const backGeometry = new THREE.BoxGeometry(
-    config.backrest.geometry.w,
-    config.backrest.geometry.h,
-    config.backrest.geometry.d
+    typeof backGeometryCfg.w === 'number' ? backGeometryCfg.w : 0.4,
+    typeof backGeometryCfg.h === 'number' ? backGeometryCfg.h : 0.6,
+    typeof backGeometryCfg.d === 'number' ? backGeometryCfg.d : 0.1
   );
-  const backMaterial = createStandardMaterial(config.backrest.material, globalOpacity);
+  const backMaterial = createStandardMaterial(backMaterialCfg, globalOpacity);
   const back = new THREE.Mesh(backGeometry, backMaterial);
   back.position.set(
-    config.backrest.position.x,
-    config.backrest.position.y,
-    config.backrest.position.z
+    typeof config?.backrest?.position?.x === 'number' ? config.backrest.position.x : 0,
+    typeof config?.backrest?.position?.y === 'number' ? config.backrest.position.y : 0.7,
+    typeof config?.backrest?.position?.z === 'number' ? config.backrest.position.z : -0.15
   );
   group.add(back);
 
   // Legs
+  const legsGeometryCfg = config?.legs?.geometry ?? {};
+  const legsMaterialCfg = config?.legs?.material ?? {};
   const legGeometry = new THREE.BoxGeometry(
-    config.legs.geometry.w,
-    config.legs.geometry.h,
-    config.legs.geometry.d
+    typeof legsGeometryCfg.w === 'number' ? legsGeometryCfg.w : 0.08,
+    typeof legsGeometryCfg.h === 'number' ? legsGeometryCfg.h : 0.4,
+    typeof legsGeometryCfg.d === 'number' ? legsGeometryCfg.d : 0.08
   );
-  const legMaterial = createStandardMaterial(config.legs.material, globalOpacity);
-  const legPositions: Array<{ x: number; y: number; z: number }> = config.legs.positions;
+  const legMaterial = createStandardMaterial(legsMaterialCfg, globalOpacity);
+  const legPositions: Array<{ x: number; y: number; z: number }> =
+    config?.legs?.positions ?? [
+      { x: 0.15, y: 0.2, z: 0.15 },
+      { x: 0.15, y: 0.2, z: -0.15 },
+      { x: -0.15, y: 0.2, z: 0.15 },
+      { x: -0.15, y: 0.2, z: -0.15 },
+    ];
 
   legPositions.forEach(({ x, y, z }) => {
     const leg = new THREE.Mesh(legGeometry, legMaterial);
@@ -97,28 +112,38 @@ const createTable = (config: Record<string, any>, globalOpacity: number) => {
   const group = new THREE.Group();
 
   // Top
+  const topGeometryCfg = config?.top?.geometry ?? {};
+  const topMaterialCfg = config?.top?.material ?? {};
   const topGeometry = new THREE.BoxGeometry(
-    config.top.geometry.w,
-    config.top.geometry.h,
-    config.top.geometry.d
+    typeof topGeometryCfg.w === 'number' ? topGeometryCfg.w : 0.8,
+    typeof topGeometryCfg.h === 'number' ? topGeometryCfg.h : 0.08,
+    typeof topGeometryCfg.d === 'number' ? topGeometryCfg.d : 0.5
   );
-  const topMaterial = createStandardMaterial(config.top.material, globalOpacity);
+  const topMaterial = createStandardMaterial(topMaterialCfg, globalOpacity);
   const top = new THREE.Mesh(topGeometry, topMaterial);
   top.position.set(
-    config.top.position.x,
-    config.top.position.y,
-    config.top.position.z
+    typeof config?.top?.position?.x === 'number' ? config.top.position.x : 0,
+    typeof config?.top?.position?.y === 'number' ? config.top.position.y : 0.7,
+    typeof config?.top?.position?.z === 'number' ? config.top.position.z : 0
   );
   group.add(top);
 
   // Legs
+  const legsGeometryCfg = config?.legs?.geometry ?? {};
+  const legsMaterialCfg = config?.legs?.material ?? {};
   const legGeometry = new THREE.BoxGeometry(
-    config.legs.geometry.w,
-    config.legs.geometry.h,
-    config.legs.geometry.d
+    typeof legsGeometryCfg.w === 'number' ? legsGeometryCfg.w : 0.1,
+    typeof legsGeometryCfg.h === 'number' ? legsGeometryCfg.h : 0.7,
+    typeof legsGeometryCfg.d === 'number' ? legsGeometryCfg.d : 0.1
   );
-  const legMaterial = createStandardMaterial(config.legs.material, globalOpacity);
-  const legPositions: Array<{ x: number; y: number; z: number }> = config.legs.positions;
+  const legMaterial = createStandardMaterial(legsMaterialCfg, globalOpacity);
+  const legPositions: Array<{ x: number; y: number; z: number }> =
+    config?.legs?.positions ?? [
+      { x: 0.3, y: 0.35, z: 0.15 },
+      { x: 0.3, y: 0.35, z: -0.15 },
+      { x: -0.3, y: 0.35, z: 0.15 },
+      { x: -0.3, y: 0.35, z: -0.15 },
+    ];
 
   legPositions.forEach(({ x, y, z }) => {
     const leg = new THREE.Mesh(legGeometry, legMaterial);
@@ -133,43 +158,55 @@ const createSofa = (config: Record<string, any>, globalOpacity: number) => {
   const group = new THREE.Group();
 
   // Main body
+  const bodyGeometryCfg = config?.body?.geometry ?? {};
+  const bodyMaterialCfg = config?.body?.material ?? {};
   const bodyGeometry = new THREE.BoxGeometry(
-    config.body.geometry.w,
-    config.body.geometry.h,
-    config.body.geometry.d
+    typeof bodyGeometryCfg.w === 'number' ? bodyGeometryCfg.w : 1.2,
+    typeof bodyGeometryCfg.h === 'number' ? bodyGeometryCfg.h : 0.4,
+    typeof bodyGeometryCfg.d === 'number' ? bodyGeometryCfg.d : 0.6
   );
-  const bodyMaterial = createStandardMaterial(config.body.material, globalOpacity);
+  const bodyMaterial = createStandardMaterial(bodyMaterialCfg, globalOpacity);
   const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
   body.position.set(
-    config.body.position.x,
-    config.body.position.y,
-    config.body.position.z
+    typeof config?.body?.position?.x === 'number' ? config.body.position.x : 0,
+    typeof config?.body?.position?.y === 'number' ? config.body.position.y : 0.3,
+    typeof config?.body?.position?.z === 'number' ? config.body.position.z : 0
   );
   group.add(body);
 
   // Backrest
+  const backGeometryCfg = config?.backrest?.geometry ?? {};
+  const backMaterialCfg = config?.backrest?.material ?? {};
   const backGeometry = new THREE.BoxGeometry(
-    config.backrest.geometry.w,
-    config.backrest.geometry.h,
-    config.backrest.geometry.d
+    typeof backGeometryCfg.w === 'number' ? backGeometryCfg.w : 1.2,
+    typeof backGeometryCfg.h === 'number' ? backGeometryCfg.h : 0.5,
+    typeof backGeometryCfg.d === 'number' ? backGeometryCfg.d : 0.2
   );
-  const backMaterial = createStandardMaterial(config.backrest.material, globalOpacity);
+  const backMaterial = createStandardMaterial(backMaterialCfg, globalOpacity);
   const back = new THREE.Mesh(backGeometry, backMaterial);
   back.position.set(
-    config.backrest.position.x,
-    config.backrest.position.y,
-    config.backrest.position.z
+    typeof config?.backrest?.position?.x === 'number' ? config.backrest.position.x : 0,
+    typeof config?.backrest?.position?.y === 'number' ? config.backrest.position.y : 0.6,
+    typeof config?.backrest?.position?.z === 'number' ? config.backrest.position.z : -0.35
   );
   group.add(back);
 
   // Legs
+  const legsGeometryCfg = config?.legs?.geometry ?? {};
+  const legsMaterialCfg = config?.legs?.material ?? {};
   const legGeometry = new THREE.BoxGeometry(
-    config.legs.geometry.w,
-    config.legs.geometry.h,
-    config.legs.geometry.d
+    typeof legsGeometryCfg.w === 'number' ? legsGeometryCfg.w : 0.12,
+    typeof legsGeometryCfg.h === 'number' ? legsGeometryCfg.h : 0.3,
+    typeof legsGeometryCfg.d === 'number' ? legsGeometryCfg.d : 0.12
   );
-  const legMaterial = createStandardMaterial(config.legs.material, globalOpacity);
-  const legPositions: Array<{ x: number; y: number; z: number }> = config.legs.positions;
+  const legMaterial = createStandardMaterial(legsMaterialCfg, globalOpacity);
+  const legPositions: Array<{ x: number; y: number; z: number }> =
+    config?.legs?.positions ?? [
+      { x: 0.45, y: 0.15, z: 0.2 },
+      { x: 0.45, y: 0.15, z: -0.2 },
+      { x: -0.45, y: 0.15, z: 0.2 },
+      { x: -0.45, y: 0.15, z: -0.2 },
+    ];
 
   legPositions.forEach(({ x, y, z }) => {
     const leg = new THREE.Mesh(legGeometry, legMaterial);
@@ -184,48 +221,60 @@ const createLamp = (config: Record<string, any>, globalOpacity: number) => {
   const group = new THREE.Group();
 
   // Base
+  const baseGeometryCfg = config?.base?.geometry ?? {};
+  const baseMaterialCfg = config?.base?.material ?? {};
   const baseGeometry = new THREE.ConeGeometry(
-    config.base.geometry.radius,
-    config.base.geometry.height,
-    config.base.geometry.radialSegments
+    typeof baseGeometryCfg.radius === 'number' ? baseGeometryCfg.radius : 0.25,
+    typeof baseGeometryCfg.height === 'number' ? baseGeometryCfg.height : 0.1,
+    typeof baseGeometryCfg.radialSegments === 'number'
+      ? baseGeometryCfg.radialSegments
+      : 32
   );
-  const baseMaterial = createStandardMaterial(config.base.material, globalOpacity);
+  const baseMaterial = createStandardMaterial(baseMaterialCfg, globalOpacity);
   const base = new THREE.Mesh(baseGeometry, baseMaterial);
   base.position.set(
-    config.base.position.x,
-    config.base.position.y,
-    config.base.position.z
+    typeof config?.base?.position?.x === 'number' ? config.base.position.x : 0,
+    typeof config?.base?.position?.y === 'number' ? config.base.position.y : 0.05,
+    typeof config?.base?.position?.z === 'number' ? config.base.position.z : 0
   );
   group.add(base);
 
   // Pole
+  const poleGeometryCfg = config?.pole?.geometry ?? {};
+  const poleMaterialCfg = config?.pole?.material ?? {};
   const poleGeometry = new THREE.CylinderGeometry(
-    config.pole.geometry.radiusTop,
-    config.pole.geometry.radiusBottom,
-    config.pole.geometry.height,
-    config.pole.geometry.radialSegments
+    typeof poleGeometryCfg.radiusTop === 'number' ? poleGeometryCfg.radiusTop : 0.03,
+    typeof poleGeometryCfg.radiusBottom === 'number' ? poleGeometryCfg.radiusBottom : 0.03,
+    typeof poleGeometryCfg.height === 'number' ? poleGeometryCfg.height : 1.0,
+    typeof poleGeometryCfg.radialSegments === 'number'
+      ? poleGeometryCfg.radialSegments
+      : 16
   );
-  const poleMaterial = createStandardMaterial(config.pole.material, globalOpacity);
+  const poleMaterial = createStandardMaterial(poleMaterialCfg, globalOpacity);
   const pole = new THREE.Mesh(poleGeometry, poleMaterial);
   pole.position.set(
-    config.pole.position.x,
-    config.pole.position.y,
-    config.pole.position.z
+    typeof config?.pole?.position?.x === 'number' ? config.pole.position.x : 0,
+    typeof config?.pole?.position?.y === 'number' ? config.pole.position.y : 0.5,
+    typeof config?.pole?.position?.z === 'number' ? config.pole.position.z : 0
   );
   group.add(pole);
 
   // Shade
+  const shadeGeometryCfg = config?.shade?.geometry ?? {};
+  const shadeMaterialCfg = config?.shade?.material ?? {};
   const shadeGeometry = new THREE.ConeGeometry(
-    config.shade.geometry.radius,
-    config.shade.geometry.height,
-    config.shade.geometry.radialSegments
+    typeof shadeGeometryCfg.radius === 'number' ? shadeGeometryCfg.radius : 0.2,
+    typeof shadeGeometryCfg.height === 'number' ? shadeGeometryCfg.height : 0.3,
+    typeof shadeGeometryCfg.radialSegments === 'number'
+      ? shadeGeometryCfg.radialSegments
+      : 32
   );
-  const shadeMaterial = createStandardMaterial(config.shade.material, globalOpacity);
+  const shadeMaterial = createStandardMaterial(shadeMaterialCfg, globalOpacity);
   const shade = new THREE.Mesh(shadeGeometry, shadeMaterial);
   shade.position.set(
-    config.shade.position.x,
-    config.shade.position.y,
-    config.shade.position.z
+    typeof config?.shade?.position?.x === 'number' ? config.shade.position.x : 0,
+    typeof config?.shade?.position?.y === 'number' ? config.shade.position.y : 1.15,
+    typeof config?.shade?.position?.z === 'number' ? config.shade.position.z : 0
   );
   group.add(shade);
 
@@ -425,12 +474,20 @@ export function ARViewer({
     // Add new objects
     placedObjects.forEach((obj) => {
       const model = createFurnitureModel(obj);
-      model.position.x = (obj.position.x + 0.5) * 3;
-      model.position.y = -(obj.position.y - 0.5) * 3;
-      model.rotation.x = (obj.rotation.x * Math.PI) / 180;
-      model.rotation.y = (obj.rotation.y * Math.PI) / 180;
-      model.rotation.z = (obj.rotation.z * Math.PI) / 180;
-      model.scale.multiplyScalar(obj.scale);
+      const posX = typeof obj.position?.x === 'number' ? obj.position.x : 0;
+      const posY = typeof obj.position?.y === 'number' ? obj.position.y : 0;
+      const rotX = typeof obj.rotation?.x === 'number' ? obj.rotation.x : 0;
+      const rotY = typeof obj.rotation?.y === 'number' ? obj.rotation.y : 0;
+      const rotZ = typeof obj.rotation?.z === 'number' ? obj.rotation.z : 0;
+      const scale = typeof obj.scale === 'number' ? obj.scale : 1;
+
+      model.position.x = (posX + 0.5) * 3;
+      model.position.y = -(posY - 0.5) * 3;
+      model.rotation.x = (rotX * Math.PI) / 180;
+      model.rotation.y = (rotY * Math.PI) / 180;
+      model.rotation.z = (rotZ * Math.PI) / 180;
+      model.scale.set(1, 1, 1);
+      model.scale.multiplyScalar(scale);
 
       // Highlight active object
       if (obj.id === activeObjectId) {
