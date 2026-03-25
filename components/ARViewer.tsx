@@ -263,15 +263,41 @@ export function ARViewer({
 
     initializeAR();
 
+    // Create video texture for background
+    let videoTexture: THREE.VideoTexture | null = null;
+    let backgroundPlane: THREE.Mesh | null = null;
+
+    const setupVideoBackground = () => {
+      if (videoRef.current && !videoTexture) {
+        videoTexture = new THREE.VideoTexture(videoRef.current);
+        videoTexture.minFilter = THREE.LinearFilter;
+        videoTexture.magFilter = THREE.LinearFilter;
+        
+        // Create a background plane with the video texture
+        const planeGeometry = new THREE.PlaneGeometry(width / 100, height / 100);
+        const planeMaterial = new THREE.MeshBasicMaterial({
+          map: videoTexture,
+          side: THREE.DoubleSide,
+          depthTest: false,
+          depthWrite: false
+        });
+        backgroundPlane = new THREE.Mesh(planeGeometry, planeMaterial);
+        backgroundPlane.position.z = -10; // Place behind all objects
+        backgroundPlane.renderOrder = -1; // Render first
+        scene.add(backgroundPlane);
+      }
+    };
+
     // Animation loop
     const animate = () => {
       requestAnimationFrame(animate);
 
       if (videoRef.current && videoRef.current.readyState === videoRef.current.HAVE_ENOUGH_DATA) {
-        // Draw video as background
-        const ctx = renderer.getContext();
-        ctx.globalCompositeOperation = 'destination-over';
-        ctx.drawImage(videoRef.current, 0, 0, width, height);
+        // Setup video background on first frame
+        if (!videoTexture) {
+          setupVideoBackground();
+        }
+        // Video texture updates automatically
       }
 
       renderer.render(scene, camera);
@@ -284,6 +310,25 @@ export function ARViewer({
         const tracks = (videoRef.current.srcObject as MediaStream).getTracks();
         tracks.forEach(track => track.stop());
       }
+      
+      // Dispose of video texture and background plane
+      if (videoTexture) {
+        videoTexture.dispose();
+      }
+      if (backgroundPlane) {
+        if (backgroundPlane.geometry) backgroundPlane.geometry.dispose();
+        if (backgroundPlane.material) {
+          if (Array.isArray(backgroundPlane.material)) {
+            backgroundPlane.material.forEach(mat => mat.dispose());
+          } else {
+            backgroundPlane.material.dispose();
+          }
+        }
+        scene.remove(backgroundPlane);
+      }
+      
+      // Dispose of renderer
+      renderer.dispose();
     };
   }, [onCameraReady]);
 
@@ -455,7 +500,7 @@ export function ARViewer({
   };
 
   return (
-    <div className="relative w-full h-full bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl overflow-hidden shadow-2xl">
+    <div className="relative w-full h-full bg-linear-to-br from-slate-900 to-slate-800 rounded-2xl overflow-hidden shadow-2xl">
       <video
         ref={videoRef}
         className="absolute inset-0 w-full h-full object-cover"
