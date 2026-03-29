@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find 'D:\\\\University Programming\\\\HCI\\\\AR-Furniture-Preview' -not -path */node_modules/* -not -path */.next/* -not -path */.git/* -type f)",
+      "Bash(npx tsc:*)"
+    ]
+  }
+}
